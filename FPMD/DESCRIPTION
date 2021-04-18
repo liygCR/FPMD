@@ -1,0 +1,17 @@
+Package: FPMD
+Type: Package
+Title: On Functional Processes with Multiple Discontinuities
+Version: 0.1.0
+Author: Jialiang Li, Yaguang Li and Tailen Hsing
+Maintainer: Yaguang Li <liyg@ustc.edu.cn>
+Description: This package handles the problem of estimating multiple discontinuities 
+    for a functional data process. A half-kernel approach is considered that 
+    addresses the inference of the total number, locations, and jump sizes of 
+    the changes. 
+License: GPL (>= 2)
+Depends: R (>= 4.0.0)
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 1.0.4), RcppEigen, fdapace, zoo, locpol, pracma, extraDistr
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 7.1.1
