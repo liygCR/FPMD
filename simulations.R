@@ -5,6 +5,8 @@ library(fdapace)
 library(extraDistr)
 library(pracma)
 
+source("Meanfromfdapace.R")
+
 
 ##################### 200 replication simulation #################
 # setting 1
