@@ -73,14 +73,14 @@ pwCBFun <- function(par){
 }
 
 ## confidence band cover
-coverFun <- function(res) {
-  
+coverFun <- function(res, mu_fun) {
+
   cbandMu <- pwCBFun(res)
   workGrid <- res$workGrid
   rho = res$rho
   h_tau <- res$h_tau
   tau_est = c(h_tau, res$mu_jumptime, 1-h_tau)
-  
+
   if (res$mu_jumptime[1] > 0) {
     # tau_true = c(h_tau, tau, 1-h_tau)
     # LworkGrid =  lapply(1:(length(tau_est) - 1), function(i)
@@ -98,25 +98,26 @@ coverFun <- function(res) {
       cbandMu[,workGrid < tau_est[i + 1] - rho &
                 workGrid >= tau_est[i] + rho, drop = FALSE])
     LcbandMu = LcbandMu[!sapply(LcbandMu, isempty)]
-    
+
     ## simutanious confidence band
     # ind = all(mapply(function(x,y)all(x >= y[2,]) & all(x <= y[1,]), x = Lmutrue, y = LcbandMu))
     ## pointwise confidence band
-    pcb = mean(do.call(c,mapply(function(x,y) x >= y[2,] & x <= y[1,], 
+    pcb = mean(do.call(c,mapply(function(x,y) x >= y[2,] & x <= y[1,],
                                 x = Lmutrue, y = LcbandMu, SIMPLIFY = FALSE)))
   } else {
-    
+
     mutrue = sapply(workGrid, mu_fun)
     ## simutanious confidence band
     # scb = all(mutrue >= cbandMu[2,]) & all(mutrue <= cbandMu[1,])
     ## pointwise confidence band
     pcb = mean(mutrue >= cbandMu[2,] & mutrue <= cbandMu[1,])
   }
-  
-  
-  
+
+
+
   return(pcb)
 }
+
 
 
 
