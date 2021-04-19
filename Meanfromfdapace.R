@@ -1,8 +1,11 @@
-SmoothedMean <- function (y, t, weight, obsGrid, regGrid, optns){
+SmoothedMean <- function (y, t, weight, obsGrid, regGrid, optns, 
+                          Wtype = c("OBS", "SUBJ", "MIX", "OPT")){
   
-  # For the case of binned data one may use a weighted mean response for each time-point.
-  # This is not currently implemented. \hat{y}_i = \sum_i w_i y_i where w_i are the
-  # same points for common t_is so we have: \hat{y}_i = n_t w_i \bar{y}
+  
+  ## weight type
+  Wtype = match.arg(Wtype)
+  mi = sapply(t, length)
+  numOfCurves = length(y);
   
   userMu = optns$userMu;
   methodBwMu = optns$methodBwMu;
@@ -54,16 +57,45 @@ SmoothedMean <- function (y, t, weight, obsGrid, regGrid, optns){
     # Get the mean function using the bandwith estimated above:
     xin = unlist(t);    
     yin = unlist(y)[order(xin)];
-    xin = sort(xin);    
-    win = weight #rep(1, length(xin));
+    xin = sort(xin);   
+    if(is.null(weight)){
+      win = weightFun(h = bw_mu, wi = weight, mi = mi, n = numOfCurves, Wtype = Wtype)$weight
+    } else {
+      win = weight #rep(1, length(xin));
+    }
+    if(is.null(regGrid)){
+      regGrid = seq( max(min(obsGrid), bw_mu), min(max(obsGrid), 1- bw_mu), length.out = optns$nRegGrid);
+    }
     mu = Lwls1D(bw_mu, kernel_type = kernel, npoly = npoly, nder = nder, xin = xin, yin= yin, xout = obsGrid, win = win)
-    muDense = Lwls1D(bw_mu, kernel_type = kernel, npoly = npoly, nder = nder, xin = xin, yin= yin, xout = regGrid, win = win)
+    muWork = Lwls1D(bw_mu, kernel_type = kernel, npoly = npoly, nder = nder, xin = xin, yin= yin, xout = regGrid, win = win)
   }  
   
-  result <- list( 'mu' = mu, 'muDense'= muDense, 'bw_mu' = bw_mu);
-  class(result) <- "SMC"
+  
+  ## Covariance function and sigma2
+  scsObj = FPMD:::GetSmoothedCovarSurface(y = y, t = t, mu = mu, obsGrid = obsGrid, 
+                                   regGrid = regGrid, optns = optns) 
+  sigma2 <- scsObj[['sigma2']]
+  
+  # Get the results for the eigen-analysis
+  eigObj = fdapace:::GetEigenAnalysisResults(smoothCov = scsObj$smoothCov, regGrid, optns, muWork = muWork)
+  fittedCov = eigObj$fittedCov
+  
+  
+  
+  result <- list( 'mu' = mu, 
+                  'muWork'= muWork, 
+                  'obsGrid' = obsGrid, 
+                  'workGrid' = regGrid,
+                  'bw_mu' = bw_mu, 
+                  'smoothedCov' = scsObj$smoothCov, 
+                  'fittedCov' = fittedCov, 
+                  'sigma2' = sigma2,
+                  'wi' = win,
+                  'mi' = mi);
+  class(result) = 'resNCP'
   return(result)
 }
+
 
 
 
@@ -151,6 +183,38 @@ CVLwls1D <- function(y, t, kernel, npoly, nder, dataType, kFolds = 5, useBW1SE =
   
   return(bopt)
   
+}
+
+
+
+
+## different weight
+weightFun <- function(h, wi, mi, n, Wtype = c("OBS", "SUBJ", "MIX", "OPT")){
+  
+  Wtype = match.arg(Wtype)
+  if (is.null(wi)) {
+    
+    if(Wtype == "OBS"){
+      wi = rep(1/sum(mi), n)
+    } else if(Wtype == "SUBJ"){
+      wi = 1/(n*mi)
+    } else if(Wtype == "OPT"){
+      wi = (1/h + mi - 1)^(-1)/sum(mi/(1/h + mi - 1))
+    } else if(Wtype == "MIX") {
+      c1 <- ( 1/(h*mean(mi)) + mean(mi^2)/mean(mi)^2 )/n
+      c2 <- (mean(1/mi)/h + 1)/n
+      alp <- c2/(c1+c2)
+      wi <- alp/sum(mi) + (1-alp)/(n*mi)
+      
+    }
+    
+  }
+  
+  weight = rep(wi, times = mi)
+  
+  
+  
+  return(list(weight = weight, wi = wi))
 }
 
 
