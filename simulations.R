@@ -41,7 +41,7 @@ simFun <- function(n, Q, mu_fun){
   bw.seq = seq(0.01, 0.13, by = 0.02)
   resCP = FPMD(Ly = Ly, Lt = Lt, wi = NULL, Wtype = "SUBJ", zeta = NULL,
                bw.seq = bw.seq, NbGrid = 101, kFolds = 5, refined = TRUE,
-               individualCurveJump = FALSE, nRegGrid = 101,
+               individualCurveJump = FALSE, nRegGrid = 201,
                npoly = 1, nder = 0, alpha = 0.05, cutoff = max)
 
   ## fdapace
