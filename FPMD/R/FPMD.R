@@ -177,7 +177,7 @@ FPMD <- function(Ly, Lt, wi = NULL, Wtype = c("OBS", "SUBJ", "MIX", "OPT"),
   # different type of weight
   win = weightFun(h = h_tau, wi = wi, mi = mi, n = numOfCurves, Wtype = Wtype)
   # Get the mean function using the bandwith estimated above:
-  smcObj = MeanBreaksFP(xin = xin, yin= yin, weight = win$weight, xout = regGrid,
+  smcObj = MeanBreaksFP(xin = xin, yin= yin, win = win, mi = mi, xout = regGrid,
                         h_tau = h_tau, h_d = h_d, zeta = zeta, refined = refined,
                         npoly = npoly, nder = nder, kernel = optns$kernel, NbGrid = NbGrid)
   mu = smcObj$mu
@@ -219,7 +219,7 @@ FPMD <- function(Ly, Lt, wi = NULL, Wtype = c("OBS", "SUBJ", "MIX", "OPT"),
   if(individualCurveJump){
 
     LX = indJump = vector("list", numOfCurves)
-    allObj = MeanBreaksFP(xin = xin, yin= yin, weight = win$weight, xout = sort(unlist(Lt)),
+    allObj = MeanBreaksFP(xin = xin, yin= yin, win = win, mi = mi, xout = sort(unlist(Lt)),
                           h_tau = h_tau, h_d = h_d, zeta = zeta, refined = refined,
                           npoly = npoly, nder = nder, kernel = optns$kernel, NbGrid = NbGrid)
     muall = allObj$muout
@@ -410,18 +410,19 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
   tt  = unlist(Lt);
   yy  = unlist(Ly);
   ind = unlist(lapply( 1:ncohort, function(j) rep(j, times=length(Lt[[j]]))));
-  yyn = yy[order(tt)];
-  ind = ind[order(tt)];
-  ttn = sort(tt);
+  # yyn = yy[order(tt)];
+  # ind = ind[order(tt)];
+  # ttn = sort(tt);
 
 
 
   if (is.null(bw.seq)) {
 
     # Get minimum reasonable bandwidth
-    a0=ttn[1];
-    b0=ttn[length(ttn)];
-    rang = b0-a0;
+    # a0=ttn[1];
+    # b0=ttn[length(ttn)];
+    # rang = b0-a0;
+    rang = max(tt) - min(tt)
     m_max = max(sapply(Lt, length))
     # nn = ifelse(m_max/ncohort > 2, npoly + m_max/ncohort - 1, npoly + m_max/ncohort)
     nn = npoly + m_max/ncohort
@@ -510,14 +511,22 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
 
       for (i in 1:kFolds){
 
-        xout= ttn[ ind %in% theFolds[[i]]];
-        obs = yyn[ ind %in% theFolds[[i]]];
-        xin = ttn[!ind %in% theFolds[[i]]];
-        yin = yyn[!ind %in% theFolds[[i]]];
-        win=rep(1/length(yin),length(yin));
+        # xout= ttn[ ind %in% theFolds[[i]]];
+        # obs = yyn[ ind %in% theFolds[[i]]];
+        # xin = ttn[!ind %in% theFolds[[i]]];
+        # yin = yyn[!ind %in% theFolds[[i]]];
+        # win=rep(1/length(yin),length(yin));
+
+
+        xout= tt[ ind %in% theFolds[[i]]];
+        obs = yy[ ind %in% theFolds[[i]]];
+        xin = tt[!ind %in% theFolds[[i]]];
+        yin = yy[!ind %in% theFolds[[i]]];
+        miin = c(table(ind[!ind %in% theFolds[[i]]]));
+        win = weightFun(h = bw.seq[j], wi = NULL, mi = miin, n = length(miin), Wtype = Wtype);
 
         muout = tryCatch(
-          MeanBreaksFP(xin = xin, yin= yin, weight = win, xout = xout, NbGrid = NbGrid,
+          MeanBreaksFP(xin = xin, yin= yin, win = win, mi = miin, xout = xout, NbGrid = NbGrid,
                        h_tau = bw.seq[j], h_d = bw.seq[k], zeta = zeta.seq[j],
                        npoly=npoly, nder= nder, kernel = kernel, refined = refined)$muout,
           error=function(err) {
