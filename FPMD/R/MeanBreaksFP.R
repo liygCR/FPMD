@@ -6,7 +6,8 @@
 #' @param yin A vector containing the observed values.
 #' @param xin A vector containing the observation time points corresponding to yin.
 #' @param xout A vector containing the observation time points for mean estimation.
-#' @param weight A vector of weight for each observations.
+#' @param win A list containing a vector of weight for each observations and the duplicated weight.
+#' @param mi A vector containing the number of observations for each subject.
 #' @param zeta Cut-off threshold for change point detection.
 #' @param npoly The degree of polynomial. Default is 1 for local linear smoothing.
 #' @param nder The order of derivative. Default is 0 for local linear smoothing, and should smaller than npoly.
@@ -44,7 +45,7 @@
 
 ######### Get Mean function, Covariance function and sigma2
 ### mean estimation with multiple breaks
-MeanBreaksFP <- function(yin, xin, weight, xout, NbGrid, h_tau, h_d, zeta,
+MeanBreaksFP <- function(yin, xin, win, mi, xout, NbGrid, h_tau, h_d, zeta,
                          npoly = 1, nder = 0, kernel, refined = FALSE) {
 
   firsttsMeanBreaksFP <- Sys.time() #First time-stamp for MeanBreaksFP
@@ -52,6 +53,10 @@ MeanBreaksFP <- function(yin, xin, weight, xout, NbGrid, h_tau, h_d, zeta,
 
   ####### change-points detection procedure ############
   firsttsJump <- Sys.time()
+
+  ## weight structure
+  weight = win$weight
+  wi = win$wi
 
   # Generate basic grids for jump detect:
   obsGrid = sort(unique(xin));
@@ -147,7 +152,8 @@ MeanBreaksFP <- function(yin, xin, weight, xout, NbGrid, h_tau, h_d, zeta,
 
 
     ## refine stage to estimate jump size
-    rho_d = 1.1*h_tau^2
+    # rho_d = 1.1*h_tau^2
+    rho_d = 0.3*(h_tau^2 + sqrt(log(length(mi))*sum(mi*(mi-1+1/h_tau)*wi^2))*h_tau)
     names(rho_d) = c("rho")
     jumpset_l = c(mu_jumptime - rho_d)
     jumpset_r = c(mu_jumptime + rho_d)
