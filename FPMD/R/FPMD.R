@@ -410,9 +410,9 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
   tt  = unlist(Lt);
   yy  = unlist(Ly);
   ind = unlist(lapply( 1:ncohort, function(j) rep(j, times=length(Lt[[j]]))));
-  # yyn = yy[order(tt)];
-  # ind = ind[order(tt)];
-  # ttn = sort(tt);
+  yyn = yy[order(tt)];
+  ind = ind[order(tt)];
+  ttn = sort(tt);
 
 
 
@@ -511,17 +511,13 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
 
       for (i in 1:kFolds){
 
-        # xout= ttn[ ind %in% theFolds[[i]]];
-        # obs = yyn[ ind %in% theFolds[[i]]];
-        # xin = ttn[!ind %in% theFolds[[i]]];
-        # yin = yyn[!ind %in% theFolds[[i]]];
+        xout= ttn[ ind %in% theFolds[[i]]];
+        obs = yyn[ ind %in% theFolds[[i]]];
+        xin = ttn[!ind %in% theFolds[[i]]];
+        yin = yyn[!ind %in% theFolds[[i]]];
         # win=rep(1/length(yin),length(yin));
 
 
-        xout= tt[ ind %in% theFolds[[i]]];
-        obs = yy[ ind %in% theFolds[[i]]];
-        xin = tt[!ind %in% theFolds[[i]]];
-        yin = yy[!ind %in% theFolds[[i]]];
         miin = c(table(ind[!ind %in% theFolds[[i]]]));
         win = weightFun(h = bw.seq[j], wi = NULL, mi = miin, n = length(miin), Wtype = Wtype);
 
@@ -565,7 +561,6 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
   return(boptList)
 
 }
-
 
 
 
