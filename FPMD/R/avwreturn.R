@@ -53,7 +53,7 @@
 #' obsGrid <- res$obsGrid
 #' workGrid <- res$workGrid
 #'
-#' ##
+#'
 #' par(mfrow=c(1,1))
 #' matplot(data_SS[,-1], type = "p", pch = 1, xlab = "Dates",
 #'         ylab = "Average Value Weighted Returns",
@@ -64,6 +64,118 @@
 #' abline( v = round(mu_jumptime *nrow(data_SS)), lty = 2)
 #' lines((obsGrid*nrow(data_SS)), mu, col = 4)
 #' data_SS$Date[round(mu_jumptime*nrow(data_SS))]
+#'
+#'
+#' ## combine all as iid, Xia and Qiu 2016
+#' t = unlist(Lt);
+#' y = unlist(Ly)[order(t)];
+#' t = sort(t);
+#' indJumpall = FPMD:::indMeanbreak(y = y, t = t, M_max = 15, NbGrid = 101,
+#'                           kernel = res$optns$kernel, npoly = 1, nder = 0)
+#' ##  hdbinseg package from H. Cho and P. Fryzlewicz (2014) JRSSB
+#' library(hdbinseg)
+#' dd = t(data_SS[,-1])
+#' ecp_CHO = dcbs.alg(dd, cp.type=1, phi=0.5, temporal=FALSE, do.parallel=0)$ecp
+#'
+#'
+#'
+#'
+#'
+#' ###
+#' par(mfrow = c(2, 2))
+#' ind_x = seq(1, nrow(data_SS), length.out = 18)
+#' ## 1
+#' matplot(data_SS[1:100,-1], type = "p", pch = 1, xlab = "Dates",
+#'         ylab = "Average Value Weighted Returns",
+#'         main = '', col = 'gray', xaxt="n")
+#' axis(1, at=ind_x[1:5], labels=data_SS[ind_x[1:5], 1])
+#' abline( v = round(mu_jumptime *nrow(data_SS)), col = 'red', lty = 2)
+#' lines((obsGrid*nrow(data_SS))[1:100], mu[1:100], col = 'red', lwd = 1.5)
+#' abline( v = round(indJumpall$mu_jumptime*nrow(data_SS)),
+#'         lty = 'dotted', col = "green")
+#' lines(y = indJumpall$mu[1:100], x = (obsGrid*nrow(data_SS))[1:100],
+#'       col = "green", lty = 1, lwd = 1.5)
+#' points(x = round(indJumpall$mu_jumptime*nrow(data_SS))[1:2],
+#'        y = rep(-8.3, length(indJumpall$mu_jumptime))[1:2],
+#'        pch= rep("*", length(indJumpall$mu_jumptime)),
+#'        cex = 2, col = "green",  xpd = TRUE)
+#' text(x = round(indJumpall$mu_jumptime*nrow(data_SS))[1:2],
+#'      y = rep(-8.3, length(indJumpall$mu_jumptime))[1:2],
+#'      labels = data_SS$Date[round(indJumpall$mu_jumptime*nrow(data_SS))][1:2],
+#'      xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+#' ## cho
+#' points(x = ecp_CHO,
+#'        y = rep(-8.3, length(ecp_CHO)),
+#'        pch= rep("*", length(ecp_CHO)),
+#'        cex = 2, col = "blue",  xpd = TRUE)
+#' text(x = ecp_CHO,
+#'      y = rep(-8.3, length(ecp_CHO)),
+#'      labels = data_SS$Date[ecp_CHO],
+#'      xpd = TRUE, pos = 3, cex = 0.5, col = "blue")
+#' ## 2
+#' matplot(data_SS[101:160,-1], type = "p", pch = 1, xlab = "Dates",
+#'         ylab = "Average Value Weighted Returns",
+#'         main = '', col = 'gray', xaxt="n")
+#' axis(1, at=ind_x[6:8]-100, labels=data_SS[ind_x[6:8], 1])
+#' abline( v = round(mu_jumptime *nrow(data_SS))[-c(1:3)]-100, col = 'red', lty = 2)
+#' lines((obsGrid*nrow(data_SS))[1:60], mu[101:160], col = 'red', lwd = 1.5)
+#' lines(y = indJumpall$mu[101:160], x = (unique(t)*nrow(data_SS))[1:60],
+#'       col = "green", lty = 1, lwd = 1.5)
+#' points(x = round(indJumpall$mu_jumptime*nrow(data_SS))-100,
+#'        y = rep(-6, length(indJumpall$mu_jumptime)),
+#'        pch= rep("*", length(indJumpall$mu_jumptime)),
+#'        cex = 2, col = "green",  xpd = TRUE)
+#' text(x = round(indJumpall$mu_jumptime*nrow(data_SS))-100,
+#'      y = rep(-6, length(indJumpall$mu_jumptime)),
+#'      labels = data_SS$Date[round(indJumpall$mu_jumptime*nrow(data_SS))],
+#'      xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+#'
+#' ## 3
+#' matplot(data_SS[161:280,-1], type = "p", pch = 1, xlab = "Dates",
+#'         ylab = "Average Value Weighted Returns", ylim = c(-8, 8),
+#'         main = '', col = 'gray', xaxt="n")
+#' axis(1, at=ind_x[9:13]-160, labels=data_SS[ind_x[9:13], 1])
+#' abline( v = round(mu_jumptime *nrow(data_SS))[-c(1:4)]-160, col = 'red', lty = 2)
+#' lines((obsGrid*nrow(data_SS))[1:120], mu[161:280], col = 'red', lwd = 1.5)
+#' lines(y = indJumpall$mu[161:280], x = (unique(t)*nrow(data_SS))[1:120],
+#'       col = "green", lty = 1, lwd = 1.5)
+#' points(x = round(indJumpall$mu_jumptime*nrow(data_SS))-160,
+#'        y = rep(-8.6, length(indJumpall$mu_jumptime)),
+#'        pch= rep("*", length(indJumpall$mu_jumptime)),
+#'        cex = 2, col = "green",  xpd = TRUE)
+#' text(x = round(indJumpall$mu_jumptime*nrow(data_SS))-160,
+#'      y = rep(-8.6, length(indJumpall$mu_jumptime)),
+#'      labels = data_SS$Date[round(indJumpall$mu_jumptime*nrow(data_SS))],
+#'      xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+#'
+#' ## 4
+#' matplot(data_SS[281:354,-1], type = "p", pch = 1, xlab = "Dates",
+#'         ylab = "Average Value Weighted Returns",
+#'         main = '', col = 'gray', xaxt="n")
+#' axis(1, at=ind_x[14:18]-280, labels=data_SS[ind_x[14:18], 1])
+#' abline( v = round(mu_jumptime *nrow(data_SS))[-c(1:7)]-280, col = 'red', lty = 2)
+#' lines((obsGrid*nrow(data_SS))[1:74], mu[281:354], col = 'red', lwd = 1.5)
+#' lines(y = indJumpall$mu[281:354], x = (unique(t)*nrow(data_SS))[1:74],
+#'       col = "green", lty = 1, lwd = 1.5)
+#' abline( v = round(indJumpall$mu_jumptime*nrow(data_SS))-280,
+#'         lty = 'dotted', col = "green")
+#' points(x = indJumpall$mu_jumptime*nrow(data_SS) - 280,
+#'        y = rep(-24.4, length(indJumpall$mu_jumptime)),
+#'        pch= rep("*", length(indJumpall$mu_jumptime)),
+#'        cex = 2, col = "green",  xpd = TRUE)
+#' text(x = indJumpall$mu_jumptime*nrow(data_SS) - 280,
+#'      y = rep(-24.4, length(indJumpall$mu_jumptime)),
+#'      labels = data_SS$Date[indJumpall$mu_jumptime*nrow(data_SS)],
+#'      xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+#' ## cho
+#' points(x = ecp_CHO - 280,
+#'        y = rep(-24.4, length(ecp_CHO)),
+#'        pch= rep("*", length(ecp_CHO)),
+#'        cex = 2, col = "blue",  xpd = TRUE)
+#' text(x = ecp_CHO - 280,
+#'      y = rep(-24.4, length(ecp_CHO)),
+#'      labels = data_SS$Date[ecp_CHO],
+#'      xpd = TRUE, pos = 3, cex = 0.5, col = "blue")
 #'
 #'
 #'
