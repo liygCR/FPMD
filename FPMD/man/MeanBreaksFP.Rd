@@ -7,7 +7,8 @@
 MeanBreaksFP(
   yin,
   xin,
-  weight,
+  win,
+  mi,
   xout,
   NbGrid,
   h_tau,
@@ -24,7 +25,9 @@ MeanBreaksFP(
 
 \item{xin}{A vector containing the observation time points corresponding to yin.}
 
-\item{weight}{A vector of weight for each observations.}
+\item{win}{A list containing a vector of weight for each observations and the duplicated weight.}
+
+\item{mi}{A vector containing the number of observations for each subject.}
 
 \item{xout}{A vector containing the observation time points for mean estimation.}
 
