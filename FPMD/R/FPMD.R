@@ -612,6 +612,8 @@ indMeanbreak <- function(y, t, M_max, NbGrid = NbGrid, npoly, nder, kernel) {
         }
       }
     }
+    mu_jumpsize = mu_jumpsize[order(mu_jumptime)]
+    mu_jumptime = sort(mu_jumptime)
 
 
     yy <- y - sapply(t, function(z) sum(mu_jumpsize*(z >= mu_jumptime)))
@@ -621,13 +623,14 @@ indMeanbreak <- function(y, t, M_max, NbGrid = NbGrid, npoly, nder, kernel) {
     mu <- nu + sapply(obsGrid, function(z)sum(mu_jumpsize *(z >= mu_jumptime)))
 
     #
+    mu = rep(mu, c(table(t)))
     sigma2[i] = mean((y - mu)^2)
 
     ## BIC
     gamma = 1
     pn = ifelse( any(mu_jumpsize == 0), 0,  sum(1/abs(mu_jumpsize)^gamma)*(log(n)*bw/n)^(1/2) )
     BIC[i] = log(sigma2[i]) + pn
-    Obj[[i]] = list(mu = mu,
+    Obj[[i]] = list(mu = unique(mu),
                     obsGrid = obsGrid,
                     bw = bw,
                     mu_jumptime = mu_jumptime,
