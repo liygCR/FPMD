@@ -40,10 +40,10 @@ for (i in 1:length(bw.seq)) {
 }
 
 ###
-res = FMbreaks(Ly = Ly, Lt = Lt, wi = NULL, Wtype = "MIX", zeta = NULL,
-               bw.seq = bw.seq, NbGrid = 101, kFolds = 5, refined = TRUE,
-               individualCurveJump = TRUE, useBW1SE = FALSE, nRegGrid = 51,
-               npoly = 1, nder = 0, alpha = 0.05, cutoff = max, M_max = 5)
+res = FPMD(Ly = Ly, Lt = Lt, wi = NULL, Wtype = "MIX", zeta = NULL,
+           bw.seq = bw.seq, NbGrid = 101, kFolds = 5, refined = TRUE,
+           individualCurveJump = TRUE, nRegGrid = 51,
+           npoly = 1, nder = 0, alpha = 0.05, cutoff = max, M_max = 5)
 
 ## with change points
 mu_jumptime <- res$mu_jumptime
@@ -68,6 +68,107 @@ axis(1, at=ind_x, labels=dataSS$ymd[ind_x])
 lines(obsGrid*366, mu, col = "red", lwd = 1.5)
 abline( v = res$mu_jumptime*366, lty = "dashed", col = "red" )
 dataSS$ymd[round(res$mu_jumptime*366)]
+
+
+## combine all as iid, Xia and Qiu 2016
+t = unlist(Lt);
+y = unlist(Ly)[order(t)];
+t = sort(t);
+indJumpall = FPMD:::indMeanbreak(y = y, t = t, M_max = 15, NbGrid = 101,
+                                 kernel = res$optns$kernel, npoly = 1, nder = 0)
+lines(y = unique(indJumpall$mu), x = (indJumpall$obsGrid*nrow(dataSS)),
+      col = "green", lty = 1, lwd = 1.5)
+abline( v = round(indJumpall$mu_jumptime*nrow(dataSS)),
+        lty = 'dotted', col = "green")
+points(x = indJumpall$mu_jumptime*nrow(dataSS),
+       y = rep(1.8, length(indJumpall$mu_jumptime)),
+       pch= rep("*", length(indJumpall$mu_jumptime)),
+       cex = 2, col = "green",  xpd = TRUE)
+text(x = indJumpall$mu_jumptime*nrow(dataSS),
+     y = rep(1.8, length(indJumpall$mu_jumptime)),
+     labels = dataSS$ymd[indJumpall$mu_jumptime*nrow(dataSS)],
+     xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+
+
+## plot mean function and confidence band
+## true and estimated mean curve are based on workGrid points
+plot.fmb <- function(res){
+
+  ## confidence band
+  cbandMu <- FPMD:::pwCBFun(res)
+  workGrid <- res$workGrid
+  muWork <- res$muWork
+  rho = res$rho
+  tau_est = c(0, res$mu_jumptime, 1)
+  mudata = t(rbind(cbandMu, muWork))
+
+
+
+  plot(x = NULL, y = NULL, ylim =c(7.5,21), xlim = range(Lt[[1]]),
+       col = rgb(0.7,0.7,0.7,0.4), xlab = "Day",
+       ylab = "Minimum Temperature", main= "", xaxt="n")
+  ind_x = seq.int(1, nrow(dataSS), length.out = 6)
+  axis(1, at=ind_x/366, labels=dataSS$ymd[ind_x])
+  ###
+
+  bandGrid =  t(rbind(cbandMu, workGrid))
+  lband = lapply(1:(length(tau_est) - 1), function(i)
+    as.data.frame(bandGrid[workGrid < (tau_est[i + 1] - rho) &
+                             workGrid >= (tau_est[i] + rho),]))
+  lapply(lband, function(x) polygon(c(x$workGrid, rev(x$workGrid)),c(x$lwCI,rev(x$upCI)),
+                                    col = rgb(0.7,0.7,0.7,0.4) , border = NA))
+  for (i in 1:(length(tau_est)-1)) {
+
+    matplot(workGrid[workGrid < (tau_est[i+1]- rho) & workGrid >= (tau_est[i]+ rho) ],
+            mudata[workGrid < (tau_est[i+1] - rho) & workGrid >= (tau_est[i]+rho), ],
+            type = "l", add = TRUE, lty = c(3, 3, 1), col = c(3,3,2), lwd = 2)
+
+  }
+  legend('top', legend = c( 'Estimated mean', 'Pointwise confidence interval'),
+         cex = .8, lwd = 2, col = c(2,3), lty = c(1,3), bty = "n")
+  points(x = res$mu_jumptime, y = rep(7, length(res$mu_jumptime)),
+         pch= rep("*", length(res$mu_jumptime)), col = 4, cex  =2, xpd = TRUE)
+  text(x = res$mu_jumptime, y = rep(7, length(res$mu_jumptime)),
+       labels=dataSS$ymd[round(res$mu_jumptime*366)],
+       xpd = TRUE, pos = 3, cex = 0.8, col = 4)
+
+}
+
+plot.fmb(res)
+
+
+## individual
+####
+year = colnames(dataSS)[-1]
+par(mfrow=c(3,3))
+for (i in 44:52) {
+
+  plot(Ly[[i]],
+       xlab = "Dates",
+       ylab = "Average Value Weighted Returns",
+       main = year[i+102],
+       col = 'gray', #rgb(0.7,0.7,0.7,0.4),
+       xaxt="n", ylim = c(0, max(Ly[[i]])))
+  ind_x = seq.int(1, nrow(dataSS), length.out = 6)
+  axis(1, at=ind_x, labels=dataSS$ymd[ind_x])
+  lines(y = res$indJump[[i]]$mu, x = Lt[[i]]*nrow(dataSS),
+        col = "blue", lty = 1, lwd = 1.5 )
+  points(x = res$indJump[[i]]$mu_jumptime*nrow(dataSS),
+         y = rep(-1, length(res$indJump[[i]]$mu_jumptime)),
+         pch= rep("*", length(res$indJump[[i]]$mu_jumptime)),
+         cex = 2, col = "blue",  xpd = TRUE)
+  text(x = res$indJump[[i]]$mu_jumptime*nrow(dataSS),
+       y = rep(-1, length(res$indJump[[i]]$mu_jumptime)),
+       labels = dataSS$ymd[res$indJump[[i]]$mu_jumptime*nrow(dataSS)],
+       xpd = TRUE, pos = 3, cex = 0.5, col = "blue")
+  ## our
+  lines(obsGrid*nrow(dataSS), mu, col = "red", lty = 1, lwd = 1.5)
+  abline( v = round(res$mu_jumptime *nrow(dataSS)), col = "red", lty = "dashed")
+
+}
+par(mfrow=c(1,1))
+
+
 
 
 }

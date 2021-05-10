@@ -75,6 +75,40 @@ abline( v = round(mu_jumptime*333), lty = "dashed", col = "red")
 lines(obsGrid*333, mu, col = "red", lwd = 1.5)
 
 
+## combine all as iid, Xia and Qiu 2016
+t = unlist(Lt);
+y = unlist(Ly)[order(t)];
+t = sort(t);
+indJumpall = FPMD:::indMeanbreak(y = y, t = t, M_max = 15, NbGrid = 101,
+                                 kernel = res$optns$kernel, npoly = 1, nder = 0)
+lines(y = indJumpall$mu, x = (unique(t)*nrow(dmat)),
+      col = "green", lty = 1, lwd = 1.5)
+abline(v = round(indJumpall$mu_jumptime*nrow(dmat)),
+       lty = 'dotted', col = "green")
+points(x = indJumpall$mu_jumptime*nrow(dmat),
+       y = rep(-.55, length(indJumpall$mu_jumptime)),
+       pch= rep("*", length(indJumpall$mu_jumptime)),
+       cex = 2, col = "green",  xpd = TRUE)
+text(x = indJumpall$mu_jumptime*nrow(dmat),
+     y = rep(-.55, length(indJumpall$mu_jumptime)),
+     labels = ym[indJumpall$mu_jumptime*nrow(dmat)],
+     xpd = TRUE, pos = 1, cex = 0.5, col = "green")
+## hdbinseg package from H. Cho and P. Fryzlewicz (2014) JRSSB
+library(hdbinseg)
+dd = t(dmat)
+ecp_CHO = dcbs.alg(dd, cp.type=1, phi= 1, temporal = TRUE, do.parallel=0)$ecp
+# ecp_CHO = sbs.alg(dd, cp.type=1, temporal = TRUE, do.parallel=0)$ecp
+## cho
+points(x = ecp_CHO,
+       y = rep(-0.55, length(ecp_CHO)),
+       pch= rep("*", length(ecp_CHO)),
+       cex = 2, col = "blue",  xpd = TRUE)
+text(x = ecp_CHO,
+     y = rep(-0.55, length(ecp_CHO)),
+     labels = ym[ecp_CHO],
+     xpd = TRUE, pos = 3, cex = 0.5, col = "blue")
+
+
 
 ## plot mean function and confidence band
 ## true and estimated mean curve are based on workGrid points

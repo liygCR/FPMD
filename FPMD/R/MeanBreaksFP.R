@@ -153,7 +153,7 @@ MeanBreaksFP <- function(yin, xin, win, mi, xout, NbGrid, h_tau, h_d, zeta,
 
     ## refine stage to estimate jump size
     # rho_d = 1.1*h_tau^2
-    rho_d = 0.3*(h_tau^2 + sqrt(log(length(mi))*sum(mi*(mi-1+1/h_tau)*wi^2))*h_tau)
+    rho_d = 0.25*(h_tau^2 + sqrt(log(length(mi))*sum(mi*(mi-1+1/h_tau)*wi^2))*h_tau)
     names(rho_d) = c("rho")
     jumpset_l = c(mu_jumptime - rho_d)
     jumpset_r = c(mu_jumptime + rho_d)

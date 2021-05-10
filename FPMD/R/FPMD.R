@@ -566,6 +566,7 @@ CVbandwidth <- function(bw.seq = NULL, zeta = NULL, Ly, Lt, npoly, nder, optns,
 
 
 
+
 ## Individual Mean function by JIC in Xia and Qiu 2015
 indMeanbreak <- function(y, t, M_max, NbGrid = NbGrid, npoly, nder, kernel) {
 
